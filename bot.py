@@ -10,21 +10,21 @@ from pyrogram.types import (
     InlineKeyboardButton,
     CallbackQuery
 )
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 from edge_tts import Communicate
 
-# Config
+# Config (Tune Diye Hue Details)
 BOT_TOKEN = "7977802802:AAFj6N2VlU4xVv7kIPf7IocaCK72y5agtlg"
 OWNER_ID = 7841882010
-SUDO_USERS = [7841882010, 8025080923]
+SUDO_USERS = [7841882010, 8025080923]  # Owner + Sudo Users
 START_ANIMATION = "https://telegra.ph/file/1a7a5a3e2a6a8b8b8b8b8.mp4"
 START_IMAGE = "https://envs.sh/Quv.jpg"
 
 app = Client(
     "ultra_bot",
     bot_token=BOT_TOKEN,
-    api_id=22545644,  # Replace with your API_ID
-    api_hash="5b8f3b235407aea5242c04909e38d33d"  # Replace with your API_HASH
+    api_id=22545644,  # Your API_ID (my.telegram.org)
+    api_hash="5b8f3b235407aea5242c04909e38d33d"  # Your API_HASH
 )
 
 # ---------------------- START MENU ----------------------
@@ -35,7 +35,7 @@ async def start(client: Client, message: Message):
         START_ANIMATION,
         caption="⚡ **Ultimate Bot Activated!**"
     )
-    await asyncio.sleep(3)  # Animation Duration
+    await asyncio.sleep(3)
     
     # Main Menu
     await message.reply_photo(
@@ -44,12 +44,15 @@ async def start(client: Client, message: Message):
 👋 **Welcome to Ultimate Bot!**
 
 ✨ **Features:**
-- TTS (Hindi Male/Female)
-- Math Solver
-- Translation
-- AFK System
-- Clone Bot
-- Tag All""",
+- /tts - Hindi Male/Female Voice
+- /math - Smart Calculator
+- /ping - Check Bot Speed
+- /afk - Set AFK Status
+- /clone - Create Your Own Bot
+- /tr - Auto-Translate
+- /spam - Spam Messages (Sudo Only)
+- /tagall - Mention All in Group
+- /broadcast - (Owner Only)""",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("❤️‍🔥 Owner", user_id=OWNER_ID)],
             [InlineKeyboardButton("📜 Help", callback_data="help")],
@@ -57,17 +60,17 @@ async def start(client: Client, message: Message):
         ])
     )
 
-# ---------------------- TTS COMMAND ----------------------
+# ---------------------- TTS (Hindi Male/Female) ----------------------
 @app.on_message(filters.command("tts"))
 async def tts(client: Client, message: Message):
     if len(message.command) < 2:
         return await message.reply("❌ Usage: `/tts Hello World`")
     
     text = " ".join(message.command[1:])
-    voice = "hi-IN-MadhurNeural"  # Hindi Male
+    voice = "hi-IN-MadhurNeural"  # Male
     
     if "female" in text.lower():
-        voice = "hi-IN-SwaraNeural"  # Hindi Female
+        voice = "hi-IN-SwaraNeural"  # Female
     
     try:
         communicate = Communicate(text, voice)
@@ -83,25 +86,6 @@ async def tts(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Error: {str(e)}")
 
-# ---------------------- BROADCAST ----------------------
-@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def broadcast(client: Client, message: Message):
-    if len(message.command) < 2:
-        return await message.reply("❌ Usage: `/broadcast Your Message`")
-    
-    text = message.text.split(None, 1)[1]
-    users = [user async for user in client.get_chat_members("me")]
-    
-    sent = 0
-    for user in users:
-        try:
-            await client.send_message(user.user.id, text)
-            sent += 1
-        except:
-            continue
-    
-    await message.reply(f"📢 Broadcast sent to {sent} users!")
-
 # ---------------------- PING ----------------------
 @app.on_message(filters.command("ping"))
 async def ping(client: Client, message: Message):
@@ -115,7 +99,7 @@ async def ping(client: Client, message: Message):
 🕒 Uptime: {datetime.datetime.now().strftime('%H:%M:%S')}
 ❤️‍🔥 Powered by @ll_ZORO_DEFAULTERS_ll""")
 
-# ---------------------- MATH ----------------------
+# ---------------------- MATH SOLVER ----------------------
 @app.on_message(filters.command("math"))
 async def math(client: Client, message: Message):
     try:
@@ -125,7 +109,7 @@ async def math(client: Client, message: Message):
     except:
         await message.reply("❌ Usage: `/math 2+2*5`")
 
-# ---------------------- AFK ----------------------
+# ---------------------- AFK SYSTEM ----------------------
 AFK_USERS = {}
 @app.on_message(filters.command("afk"))
 async def afk(client: Client, message: Message):
@@ -136,7 +120,7 @@ async def afk(client: Client, message: Message):
     }
     await message.reply(f"🚶 {message.from_user.first_name} is now AFK\n💬 Reason: {reason}")
 
-# ---------------------- CLONE ----------------------
+# ---------------------- CLONE BOT SYSTEM ----------------------
 @app.on_message(filters.command("clone"))
 async def clone(client: Client, message: Message):
     await message.reply(
@@ -182,25 +166,62 @@ async def clone(client: Client, message: Message):
 async def translate(client: Client, message: Message):
     try:
         _, lang, text = message.text.split("|", 2)
-        translator = Translator()
-        result = translator.translate(text, dest=lang)
+        translated = GoogleTranslator(source='auto', target=lang).translate(text)
         await message.reply(f"""
-🌐 Translation:
-{result.src} → {result.dest}
-{result.text}""")
+🌐 **Translation:**
+{text} → {lang}
+{translated}""")
     except:
         await message.reply("❌ Usage: `/tr en|नमस्ते`")
 
-# ---------------------- TAG ALL ----------------------
+# ---------------------- SPAM (SUDO ONLY) ----------------------
+@app.on_message(filters.command("spam") & filters.user(SUDO_USERS))
+async def spam(client: Client, message: Message):
+    if len(message.command) < 3:
+        return await message.reply("❌ Usage: `/spam 10 Hello World`")
+    
+    try:
+        count = int(message.command[1])
+        text = " ".join(message.command[2:])
+        
+        for i in range(count):
+            await message.reply_text(f"🔊 {text} ({i+1}/{count})")
+            await asyncio.sleep(0.5)  # Anti-ban delay
+    except:
+        await message.reply("❌ Usage: `/spam 5 Spam Message`")
+
+# ---------------------- TAG ALL (GROUPS) ----------------------
 @app.on_message(filters.command("tagall") & filters.group)
 async def tagall(client: Client, message: Message):
-    members = [member.user.mention async for member in client.get_chat_members(message.chat.id)]
+    members = []
+    async for member in client.get_chat_members(message.chat.id):
+        members.append(member.user.mention)
+    
     await message.reply(
         "👥 **Tagging All Members:**\n\n" + "\n".join(members),
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🔙 Close", callback_data="close")]
         ])
     )
+
+# ---------------------- BROADCAST (OWNER ONLY) ----------------------
+@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
+async def broadcast(client: Client, message: Message):
+    if len(message.command) < 2:
+        return await message.reply("❌ Usage: `/broadcast Your Message`")
+    
+    text = message.text.split(None, 1)[1]
+    users = [user async for user in client.get_chat_members("me")]
+    
+    sent = 0
+    for user in users:
+        try:
+            await client.send_message(user.user.id, text)
+            sent += 1
+        except:
+            continue
+    
+    await message.reply(f"📢 Broadcast sent to {sent} users!")
 
 # ---------------------- HELP MENU ----------------------
 @app.on_callback_query(filters.regex("^help$"))
@@ -213,9 +234,11 @@ async def help_menu(client: Client, query: CallbackQuery):
 • /math - Calculate
 • /tr - Translate
 • /afk - Set AFK
-• /tts - Text-to-Speech
-• /clone - Create bot
-• /tagall - Tag members""",
+• /tts - Text-to-Speech (Male/Female)
+• /clone - Create your own bot
+• /spam - Spam messages (Sudo)
+• /tagall - Mention all in group
+• /broadcast - (Owner only)""",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🔙 Back", callback_data="main_menu")]
         ])
